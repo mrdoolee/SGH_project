@@ -1,0 +1,6 @@
+{
+  "name": "Study Group Formation Helper",
+  "description": "CRA(교실 관계 분석) SNA 데이터와 성적 데이터를 활용한 과목 학습모둠 구성 시스템",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
