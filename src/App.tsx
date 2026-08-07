@@ -77,6 +77,13 @@ export default function App() {
   const [restoredModalResult, setRestoredModalResult] = useState<SeatingResult | null>(null);
   const [isRestoredModalOpen, setIsRestoredModalOpen] = useState<boolean>(false);
 
+  // Guard: menus 2-4 require student data; bounce back to step 1 if it's ever empty
+  useEffect(() => {
+    if (students.length === 0 && activeTab !== 'cra') {
+      setActiveTab('cra');
+    }
+  }, [students.length, activeTab]);
+
   // Save history to localStorage
   useEffect(() => {
     try {
@@ -182,6 +189,7 @@ export default function App() {
           setActiveTab={setActiveTab}
           perspective={perspective}
           setPerspective={setPerspective}
+          hasStudents={students.length > 0}
           onOpenHistory={() => setIsHistoryOpen(true)}
           onOpenHelp={() => setIsHelpOpen(true)}
           onOpenCraGuide={() => setIsCraGuideOpen(true)}

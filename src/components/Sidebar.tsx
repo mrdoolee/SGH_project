@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Laptop,
   Info,
+  Lock,
 } from 'lucide-react';
 import { ViewPerspective } from '../types';
 
@@ -21,6 +22,7 @@ interface SidebarProps {
   setActiveTab: (tab: 'cra' | 'layout' | 'constraints' | 'result') => void;
   perspective: ViewPerspective;
   setPerspective: (p: ViewPerspective) => void;
+  hasStudents: boolean;
   onOpenHistory: () => void;
   onOpenHelp: () => void;
   onOpenCraGuide: () => void;
@@ -33,6 +35,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   setActiveTab,
   perspective,
   setPerspective,
+  hasStudents,
   onOpenHistory,
   onOpenHelp,
   onOpenCraGuide,
@@ -48,24 +51,28 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: '1. 학생 & CRA 데이터 관리',
       subLabel: '학번·성별·성적·이전모둠',
       icon: Users,
+      requiresStudents: false,
     },
     {
       id: 'layout' as const,
       label: '2. 모둠 구성 설정',
       subLabel: '모둠 크기/모둠 수 설정',
       icon: LayoutGrid,
+      requiresStudents: true,
     },
     {
       id: 'constraints' as const,
       label: '3. 제약조건 & 알고리즘 설정',
       subLabel: '자리 고정·성비·가중치 설정',
       icon: SlidersHorizontal,
+      requiresStudents: true,
     },
     {
       id: 'result' as const,
       label: '4. 모둠 배치 결과 확인 & 변경',
       subLabel: '후보 비교·수동 배치 편집',
       icon: Sparkles,
+      requiresStudents: true,
     },
   ];
 
@@ -134,24 +141,44 @@ export const Sidebar: React.FC<SidebarProps> = ({
               teacherItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;
+                const isLocked = item.requiresStudents && !hasStudents;
 
                 return (
                   <button
                     key={item.id}
-                    onClick={() => setActiveTab(item.id)}
-                    className={`w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-all cursor-pointer ${
-                      isActive
-                        ? 'bg-indigo-600 text-white font-bold shadow-lg shadow-indigo-600/30'
-                        : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
+                    onClick={() => {
+                      if (isLocked) return;
+                      setActiveTab(item.id);
+                    }}
+                    disabled={isLocked}
+                    className={`w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-all ${
+                      isLocked
+                        ? 'text-slate-600 cursor-not-allowed opacity-60'
+                        : isActive
+                        ? 'bg-indigo-600 text-white font-bold shadow-lg shadow-indigo-600/30 cursor-pointer'
+                        : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 cursor-pointer'
                     }`}
-                    title={isCollapsed ? item.label : undefined}
+                    title={
+                      isLocked
+                        ? '먼저 1단계에서 학생 데이터를 입력하거나 샘플 데이터를 불러오세요'
+                        : isCollapsed
+                        ? item.label
+                        : undefined
+                    }
                   >
-                    <Icon
-                      className={`w-5 h-5 shrink-0 ${isActive ? 'text-white' : 'text-slate-400'}`}
-                    />
+                    {isLocked ? (
+                      <Lock className="w-5 h-5 shrink-0 text-slate-600" />
+                    ) : (
+                      <Icon
+                        className={`w-5 h-5 shrink-0 ${isActive ? 'text-white' : 'text-slate-400'}`}
+                      />
+                    )}
                     {!isCollapsed && (
                       <div className="overflow-hidden">
                         <div className="text-xs font-bold truncate">{item.label}</div>
+                        {isLocked && (
+                          <div className="text-[10px] text-slate-600 truncate">학생 데이터 필요</div>
+                        )}
                       </div>
                     )}
                   </button>
