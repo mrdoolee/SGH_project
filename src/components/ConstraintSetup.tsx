@@ -766,13 +766,10 @@ export const ConstraintSetup: React.FC<ConstraintSetupProps> = ({
           })()}
 
           {/* Bottom Generate Button (duplicate of the top action, for long pages) */}
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between gap-4">
-            <p className="text-xs text-slate-500">
-              위 설정을 모두 마쳤다면 자리후보를 생성하세요.
-            </p>
+          <div className="flex justify-center pt-2">
             <button
               onClick={onGenerateCandidates}
-              className="flex items-center gap-2 px-6 py-3.5 text-sm font-black text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 rounded-2xl shadow-xl shadow-indigo-200 transition-all cursor-pointer shrink-0"
+              className="flex items-center gap-2.5 px-8 py-4 text-base font-black text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 rounded-2xl shadow-xl shadow-indigo-200 transition-all cursor-pointer"
             >
               <Sparkles className="w-5 h-5 text-amber-300 animate-spin" />
               <span>자리후보 생성하기</span>
