@@ -11,7 +11,6 @@ import {
   ChevronDown,
   ChevronUp,
   ShieldCheck,
-  Laptop,
   Info,
   Lock,
 } from 'lucide-react';
@@ -26,7 +25,7 @@ interface SidebarProps {
   onOpenHistory: () => void;
   onOpenHelp: () => void;
   onOpenCraGuide: () => void;
-  onOpenOfflineGuide: () => void;
+  onOpenPrivacyInfo: () => void;
   onOpenSystemInfo: () => void;
 }
 
@@ -39,7 +38,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenHistory,
   onOpenHelp,
   onOpenCraGuide,
-  onOpenOfflineGuide,
+  onOpenPrivacyInfo,
   onOpenSystemInfo,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -212,18 +211,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {!isCollapsed ? (
           <div className="space-y-2 pt-1">
-            {/* 1. 개인정보보호 완벽 보장 & 오프라인 EXE 가이드 */}
-            <div className="bg-slate-950/90 border border-emerald-500/40 rounded-2xl p-3 space-y-2 text-center shadow-inner">
+            {/* 1. 개인정보보호 완벽 보장 안내 */}
+            <div className="bg-slate-950/90 border border-emerald-500/40 rounded-2xl p-3 space-y-1.5 text-center shadow-inner">
               <div className="flex items-center justify-center gap-1.5 text-emerald-400 font-extrabold text-[12px]">
                 <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
                 <span>개인정보보호 완벽 보장</span>
               </div>
+              <div className="text-[10px] text-emerald-300/70 font-semibold">
+                (개인 Local Device 전용 동작)
+              </div>
               <button
-                onClick={onOpenOfflineGuide}
+                onClick={onOpenPrivacyInfo}
                 className="w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-md shadow-emerald-950/40"
               >
-                <Laptop className="w-4 h-4" />
-                <span>오프라인 .EXE 실행 가이드</span>
+                <ShieldCheck className="w-4 h-4" />
+                <span>개인정보보호 안내 보기</span>
               </button>
             </div>
 
@@ -239,11 +241,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         ) : (
           <div className="flex flex-col gap-2 pt-1 border-t border-slate-800">
             <button
-              onClick={onOpenOfflineGuide}
+              onClick={onOpenPrivacyInfo}
               className="p-2 rounded-xl bg-emerald-950/80 text-emerald-400 hover:bg-emerald-900 flex justify-center cursor-pointer"
-              title="오프라인 .EXE 실행 가이드"
+              title="개인정보보호 안내 보기"
             >
-              <Laptop className="w-4 h-4" />
+              <ShieldCheck className="w-4 h-4" />
             </button>
             <button
               onClick={onOpenSystemInfo}

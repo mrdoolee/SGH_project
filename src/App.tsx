@@ -7,7 +7,7 @@ import { ResultView } from './components/ResultView';
 import { HistoryModal } from './components/HistoryModal';
 import { HelpModal } from './components/HelpModal';
 import { RestoredSeatingModal } from './components/RestoredSeatingModal';
-import { OfflineGuideModal } from './components/OfflineGuideModal';
+import { PrivacyInfoModal } from './components/PrivacyInfoModal';
 import { SystemInfoModal } from './components/SystemInfoModal';
 import { CraGuideModal } from './components/CraGuideModal';
 
@@ -72,7 +72,7 @@ export default function App() {
   const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
   const [isHelpOpen, setIsHelpOpen] = useState<boolean>(false);
   const [isCraGuideOpen, setIsCraGuideOpen] = useState<boolean>(false);
-  const [isOfflineGuideOpen, setIsOfflineGuideOpen] = useState<boolean>(false);
+  const [isPrivacyInfoOpen, setIsPrivacyInfoOpen] = useState<boolean>(false);
   const [isSystemInfoOpen, setIsSystemInfoOpen] = useState<boolean>(false);
   const [restoredModalResult, setRestoredModalResult] = useState<SeatingResult | null>(null);
   const [isRestoredModalOpen, setIsRestoredModalOpen] = useState<boolean>(false);
@@ -193,7 +193,7 @@ export default function App() {
           onOpenHistory={() => setIsHistoryOpen(true)}
           onOpenHelp={() => setIsHelpOpen(true)}
           onOpenCraGuide={() => setIsCraGuideOpen(true)}
-          onOpenOfflineGuide={() => setIsOfflineGuideOpen(true)}
+          onOpenPrivacyInfo={() => setIsPrivacyInfoOpen(true)}
           onOpenSystemInfo={() => setIsSystemInfoOpen(true)}
         />
       </div>
@@ -299,9 +299,9 @@ export default function App() {
         onClose={() => setIsCraGuideOpen(false)}
       />
 
-      <OfflineGuideModal
-        isOpen={isOfflineGuideOpen}
-        onClose={() => setIsOfflineGuideOpen(false)}
+      <PrivacyInfoModal
+        isOpen={isPrivacyInfoOpen}
+        onClose={() => setIsPrivacyInfoOpen(false)}
       />
 
       <SystemInfoModal
