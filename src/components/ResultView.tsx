@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import * as XLSX from 'xlsx';
 import {
   CraStudent,
@@ -28,6 +28,8 @@ import {
   generateSingleArrangement,
   evaluateArrangement,
   computeGroupAverages,
+  computeStudentTiers,
+  CANDIDATE_PRIORITY_MODE,
 } from '../utils/groupAlgorithm';
 import { printSeatingChart } from '../utils/printUtils';
 
@@ -63,6 +65,22 @@ const POD_COLORS = [
 
 const getPodColor = (podId: number | undefined) =>
   POD_COLORS[podId !== undefined ? podId % POD_COLORS.length : 0];
+
+// Tier chips are a screen-only readout of each student's ranking bracket (Tier 1 = top of
+// the metric the current candidate was seeded by) - never shown on the printed 모둠 배치표.
+const TIER_BADGE_COLORS = [
+  'bg-amber-400 text-slate-950',
+  'bg-sky-400 text-slate-950',
+  'bg-violet-400 text-slate-950',
+  'bg-slate-400 text-slate-950',
+];
+const getTierColor = (tier: number) => TIER_BADGE_COLORS[Math.min(tier, TIER_BADGE_COLORS.length) - 1];
+const TIER_METRIC_LABEL: Record<string, string> = {
+  scoreBalance: '성적',
+  cooperation: '협력 선호도',
+  intimacy: '친밀감',
+  balanced: '균형(성적/협력)',
+};
 
 export const ResultView: React.FC<ResultViewProps> = ({
   candidates,
@@ -189,6 +207,12 @@ export const ResultView: React.FC<ResultViewProps> = ({
   const assignments = currentCandidate.assignments;
   const groupAverages = currentCandidate.groupAverages || computeGroupAverages(assignments, desks, students);
   const groupNumbers = Array.from(new Set(desks.filter((d) => !d.disabled && d.podId !== undefined).map((d) => d.podId!))).sort((a, b) => a - b);
+  // Which metric this candidate was seeded/tiered by (see CANDIDATE_PRIORITY_MODE) - shown
+  // on-screen only as a "Tier N" chip so teachers can see each student's ranking bracket;
+  // intentionally left out of the printed 모둠 배치표 (see printUtils.ts).
+  const tierPriorityMode = CANDIDATE_PRIORITY_MODE[currentCandidate.id] || 'balanced';
+  const tierOf = computeStudentTiers(students, constraints, tierPriorityMode, groupNumbers.length);
+  const tierCount = tierOf.size > 0 ? Math.max(...tierOf.values()) : 0;
 
   const handleDeskClick = (deskId: string) => {
     if (selectedDeskForSwap === null) {
@@ -779,6 +803,13 @@ export const ResultView: React.FC<ResultViewProps> = ({
             ) : (
               <span>💡 수동 변경: 두 학생 책상을 차례로 클릭하면 위치가 스왑됩니다.</span>
             )}
+            {tierCount > 0 && (
+              <div className="mt-1 flex items-center gap-1.5 text-[11px]">
+                <span className="text-slate-500">
+                  🏷️ 좌석의 T1~T{tierCount} 배지: {TIER_METRIC_LABEL[tierPriorityMode]} 기준 상위(T1)~하위(T{tierCount}) 구간 · 화면 전용, 인쇄 시 표시 안 됨
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -866,13 +897,27 @@ export const ResultView: React.FC<ResultViewProps> = ({
                               <span className={`px-1.5 py-0.5 rounded-md font-black ${podColor.badge}`}>
                                 모둠 {desk.podId !== undefined ? desk.podId + 1 : '-'}
                               </span>
-                              {student && (
-                                <span
-                                  className={`w-2 h-2 rounded-full ${
-                                    student.gender === 'M' ? 'bg-blue-400' : 'bg-pink-400'
-                                  }`}
-                                />
-                              )}
+                              <div className="flex items-center gap-1">
+                                {student && tierOf.has(student.id) && (
+                                  <span
+                                    className={`px-1 py-0.5 rounded font-black text-[9px] leading-none ${getTierColor(
+                                      tierOf.get(student.id)!
+                                    )}`}
+                                    title={`Tier ${tierOf.get(student.id)} / ${tierCount} (${
+                                      TIER_METRIC_LABEL[tierPriorityMode]
+                                    } 기준)`}
+                                  >
+                                    T{tierOf.get(student.id)}
+                                  </span>
+                                )}
+                                {student && (
+                                  <span
+                                    className={`w-2 h-2 rounded-full ${
+                                      student.gender === 'M' ? 'bg-blue-400' : 'bg-pink-400'
+                                    }`}
+                                  />
+                                )}
+                              </div>
                             </div>
 
                             <div className="font-black text-slate-100 text-sm tracking-tight my-auto">
