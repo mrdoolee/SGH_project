@@ -413,17 +413,7 @@ export function computeGroupAverages(
   return result;
 }
 
-export type PriorityMode = 'scoreBalance' | 'cooperation' | 'intimacy' | 'balanced';
-
-// Candidate id -> the priorityMode generateCandidateArrangements seeded it with
-// (see the opt_1..opt_4 construction below). Used to recover which metric a
-// given result's tiers were drawn from, since SeatingResult doesn't store it.
-export const CANDIDATE_PRIORITY_MODE: Record<string, PriorityMode> = {
-  opt_1: 'cooperation',
-  opt_2: 'scoreBalance',
-  opt_3: 'intimacy',
-  opt_4: 'balanced',
-};
+type PriorityMode = 'scoreBalance' | 'cooperation' | 'intimacy' | 'balanced';
 
 function pickSeedMetric(priorityMode: PriorityMode, scoreAvailable: boolean, craAvailable: boolean) {
   if (priorityMode === 'scoreBalance' && scoreAvailable) return (s: CraStudent) => s.score ?? 0;
@@ -437,36 +427,20 @@ function pickSeedMetric(priorityMode: PriorityMode, scoreAvailable: boolean, cra
 }
 
 /**
- * Recovers each student's seeding tier (1-indexed) for a given candidate's
- * priorityMode - the same descending-rank / numGroups-wide bracket that
- * `distributeByTier` dealt them into when the arrangement was generated
- * (see its docstring). This is a display-only readout: it does not touch
- * assignments, so it stays correct even after manual seat swaps.
+ * Ranks every student by academic score alone (descending, gender-blind) and
+ * brackets them into numGroups-wide tiers (Tier 1 = top scorers). This is a
+ * display-only readout for the teacher - independent of which candidate/
+ * priorityMode is selected and of cooperation/intimacy data - so it does not
+ * affect seating assignments.
  */
-export function computeStudentTiers(
-  students: CraStudent[],
-  constraints: SeatingConstraints,
-  priorityMode: PriorityMode,
-  numGroups: number
-): Map<string, number> {
+export function computeScoreTiers(students: CraStudent[], numGroups: number): Map<string, number> {
   const tierOf = new Map<string, number>();
-  if (numGroups <= 0) return tierOf;
+  if (numGroups <= 0 || !hasScoreData(students)) return tierOf;
 
-  const metricFn = pickSeedMetric(priorityMode, hasScoreData(students), hasCraData(students));
-  if (!metricFn) return tierOf;
-
-  const assignTiers = (pool: CraStudent[]) => {
-    [...pool]
-      .sort((a, b) => metricFn(b) - metricFn(a))
-      .forEach((s, idx) => tierOf.set(s.id, Math.floor(idx / numGroups) + 1));
-  };
-
-  if (constraints.genderRule !== 'random') {
-    assignTiers(students.filter((s) => s.gender === 'M'));
-    assignTiers(students.filter((s) => s.gender === 'F'));
-  } else {
-    assignTiers(students);
-  }
+  students
+    .filter((s) => typeof s.score === 'number' && !Number.isNaN(s.score))
+    .sort((a, b) => (b.score as number) - (a.score as number))
+    .forEach((s, idx) => tierOf.set(s.id, Math.floor(idx / numGroups) + 1));
 
   return tierOf;
 }
