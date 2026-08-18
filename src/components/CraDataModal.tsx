@@ -8,6 +8,7 @@ import {
   SeatingResult,
 } from '../types';
 import { SAMPLE_CRA_STUDENTS } from '../data/sampleCraData';
+import { resolveAssignmentsToCurrentStudents } from '../utils/seatingRestore';
 import * as XLSX from 'xlsx';
 import {
   Users,
@@ -143,16 +144,29 @@ export const CraDataModal: React.FC<CraDataModalProps> = ({
             setLayoutType('custom');
           }
 
-          // 2. 알고리즘 이전 짝꿍 회피 규칙 연동을 위한 히스토리 저장
+          // 1.5. 백업 파일의 학생 ID를 현재 세션의 학생 ID로 재매칭
+          // (학생 ID는 명단을 업로드할 때마다 새로 발급되므로, 백업 시점의 ID가
+          //  현재 학생 목록의 ID와 그대로 일치하는 경우는 드물다. 백업에 이름/학번
+          //  스냅샷(studentRoster)이 포함되어 있으면 이를 기준으로, 없으면 예전 형식
+          //  백업으로 간주해 ID에 남아있는 업로드 순번으로 추정 매칭한다.)
+          const { assignments, matchedByRoster, matchedById, matchedByLegacyGuess, unmatched } =
+            resolveAssignmentsToCurrentStudents(jsonResult, students);
+
+          // 2. 알고리즘 이전 짝꿍 회피 규칙 연동을 위한 히스토리 저장 (현재 세션 ID로 재매칭된 배치 사용)
           if (onSaveToHistory && jsonResult.assignments) {
             onSaveToHistory({
               id: jsonResult.id || `past_${Date.now()}`,
               title: jsonResult.title || '업로드된 이전 자리배치',
               description: jsonResult.description || '선택자료3 JSON 업로드 이전 배치 기록',
               date: jsonResult.date || new Date().toLocaleDateString('ko-KR'),
-              assignments: jsonResult.assignments,
+              assignments,
               desks: jsonResult.desks,
               dimensions: jsonResult.dimensions,
+              // Re-snapshot name/studentNumber against the now-current student IDs, so this
+              // history entry keeps restoring correctly even after a future reload changes IDs again.
+              studentRoster: students
+                .filter((s) => Object.values(assignments).includes(s.id))
+                .map((s) => ({ id: s.id, name: s.name, studentNumber: s.studentNumber, gender: s.gender })),
               metrics: jsonResult.metrics || {
                 scoreBalanceScore: 90,
                 cooperationBalanceScore: 90,
@@ -165,7 +179,6 @@ export const CraDataModal: React.FC<CraDataModalProps> = ({
           }
 
           // 3. 학생 목록 pastSeatInfo 매칭 및 업데이트
-          const assignments = jsonResult.assignments || {};
           const desksList = jsonResult.desks || [];
           let updatedCount = 0;
 
@@ -180,9 +193,7 @@ export const CraDataModal: React.FC<CraDataModalProps> = ({
           };
 
           const updatedStudents = students.map((st) => {
-            const assignedDeskId = Object.keys(assignments).find(
-              (dId) => assignments[dId] === st.id || assignments[dId] === st.name
-            );
+            const assignedDeskId = Object.keys(assignments).find((dId) => assignments[dId] === st.id);
 
             if (assignedDeskId && desksList.length > 0) {
               const myDesk = desksList.find((d) => d.id === assignedDeskId);
@@ -218,11 +229,24 @@ export const CraDataModal: React.FC<CraDataModalProps> = ({
 
           setStudents(updatedStudents);
           setPastUploadedCount(updatedCount || Object.keys(assignments).length);
-          alert(
-            `🎉 [선택자료 3] 이전 자리배치 JSON 파일 로드 완료!\n- 책상 배치(${desksList.length || '기존'}개 책상, 메뉴2) 자동 연동\n- 이전 짝/배치 기록 ${
-              updatedCount || Object.keys(assignments).length
-            }건 알고리즘 회피 연동 완료`
-          );
+
+          const matchLines = [`- 책상 배치(${desksList.length || '기존'}개 책상, 메뉴2) 자동 연동`];
+          if (matchedByRoster > 0) matchLines.push(`- 이름/학번 기준 ${matchedByRoster}명 자동 매칭`);
+          if (matchedById > 0) matchLines.push(`- 동일 세션 ID로 ${matchedById}명 매칭`);
+          if (matchedByLegacyGuess > 0) {
+            matchLines.push(
+              `- ⚠️ 이름 정보가 없는 예전 형식 백업이라 업로드 순번으로 ${matchedByLegacyGuess}명 추정 매칭(재확인 필요)`
+            );
+          }
+          if (unmatched > 0) {
+            matchLines.push(
+              students.length === 0
+                ? `- ⚠️ 현재 등록된 학생이 없어 ${unmatched}자리를 매칭하지 못했습니다. 먼저 (1) 학생 기본명단을 업로드/로드한 뒤 이 파일을 다시 업로드해 주세요.`
+                : `- ⚠️ ${unmatched}자리는 현재 명단과 이름/학번이 일치하지 않아 매칭하지 못했습니다.`
+            );
+          }
+
+          alert(`🎉 [선택자료 3] 이전 자리배치 JSON 파일 로드 완료!\n${matchLines.join('\n')}`);
         } catch (err) {
           console.error('JSON past seating parse error:', err);
           alert('JSON 이전 자리배치 파일을 읽는 중 오류가 발생했습니다.');

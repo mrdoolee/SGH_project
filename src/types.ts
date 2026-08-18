@@ -101,6 +101,11 @@ export interface SeatingResult {
   assignments: Record<string, string | null>;
   desks?: DeskPosition[];
   dimensions?: GridDimensions;
+  // Snapshot of students referenced in `assignments`, so backups can be restored
+  // by name/studentNumber even after student IDs are regenerated in a later session,
+  // and so the seating chart can be displayed straight from the file with no student
+  // roster loaded at all.
+  studentRoster?: { id: string; name: string; studentNumber?: string; gender?: Gender }[];
   metrics: {
     scoreBalanceScore: number; // 0~100, 성적 분산 없음
     cooperationBalanceScore: number; // 0~100, 협력 가중점수 분산

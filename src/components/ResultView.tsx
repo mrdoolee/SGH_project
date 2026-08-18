@@ -137,6 +137,17 @@ export const ResultView: React.FC<ResultViewProps> = ({
     setSelectedCandidateId(candId);
   };
 
+  // Build a snapshot of {id, name, studentNumber, gender} for students referenced in an
+  // assignment map. Embedding this lets a backup be restored by name/studentNumber later,
+  // even after student IDs are regenerated in a new session (IDs are minted fresh from
+  // Date.now() on each upload).
+  const buildStudentRoster = (assignments: Record<string, string | null>) => {
+    const referencedIds = new Set(Object.values(assignments).filter(Boolean) as string[]);
+    return students
+      .filter((s) => referencedIds.has(s.id))
+      .map((s) => ({ id: s.id, name: s.name, studentNumber: s.studentNumber, gender: s.gender }));
+  };
+
   // Export JSON Backup file containing layout & student assignments
   const handleExportJSON = (cand: SeatingResult) => {
     const exportData = {
@@ -148,6 +159,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
       metrics: cand.metrics,
       desks: cand.desks || desks,
       dimensions: cand.dimensions || dimensions,
+      studentRoster: cand.studentRoster || buildStudentRoster(cand.assignments),
     };
     const jsonStr = JSON.stringify(exportData, null, 2);
     const blob = new Blob([jsonStr], { type: 'application/json' });
@@ -653,6 +665,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
                           ...cand,
                           desks: cand.desks || desks,
                           dimensions: cand.dimensions || dimensions,
+                          studentRoster: cand.studentRoster || buildStudentRoster(cand.assignments),
                         };
                         onSaveToHistory(fullCand);
                         handleExportToExcel(fullCand);

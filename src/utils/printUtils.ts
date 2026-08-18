@@ -1,4 +1,5 @@
 import { SeatingResult, CraStudent, DeskPosition, GridDimensions, ViewPerspective } from '../types';
+import { resolveDisplayAssignments } from './seatingRestore';
 
 const POD_COLOR_HEXES = ['#6366f1', '#10b981', '#f59e0b', '#a855f7', '#f43f5e', '#06b6d4', '#84cc16', '#d946ef'];
 const getPodColorHex = (podId: number | undefined) =>
@@ -25,7 +26,9 @@ export function printSeatingChart(options: {
     listPosition = 'none',
   } = options;
 
-  const studentMap = new Map<string, CraStudent>(students.map((s) => [s.id, s]));
+  const resolution = resolveDisplayAssignments(result, students);
+  const studentMap = resolution.studentMap;
+  const resolvedAssignments = resolution.assignments;
   const effectiveDesks = result.desks && result.desks.length > 0 ? result.desks : defaultDesks;
   void defaultDimensions; // dimensions no longer drive layout; pods are laid out by their own spatial position
 
@@ -70,7 +73,7 @@ export function printSeatingChart(options: {
       .map((info) => {
         const memberChips = info.deskIds
           .map((deskId) => {
-            const studentId = result.assignments[deskId];
+            const studentId = resolvedAssignments[deskId];
             const student = studentId ? studentMap.get(studentId) : null;
             if (!student) return `<div class="member empty">빈 좌석</div>`;
             return `
