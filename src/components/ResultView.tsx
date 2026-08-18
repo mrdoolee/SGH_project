@@ -503,7 +503,10 @@ export const ResultView: React.FC<ResultViewProps> = ({
                 {/* Main Grid: Pure Student Number + Student Name Only with Aisles */}
                 <div className="flex flex-col items-center gap-2">
                   {printRowIndices.map((r) => {
-                    const hasRowAisle = dimensions.rowAisles?.includes(r);
+                    const hasRowAisle =
+                      printPerspective === 'teacher'
+                        ? dimensions.rowAisles?.includes(r - 1)
+                        : dimensions.rowAisles?.includes(r);
                     return (
                       <React.Fragment key={`print_r_${r}`}>
                         <div className="flex items-center gap-1.5 sm:gap-2">
@@ -843,7 +846,11 @@ export const ResultView: React.FC<ResultViewProps> = ({
         {/* Classroom Grid */}
         <div className="flex flex-col items-center gap-4 py-4 overflow-x-auto">
           {rowIndices.map((r) => {
-            const hasRowAisle = dimensions.rowAisles?.includes(r);
+            // An aisle configured as "after row r" sits visually below row r in student
+            // order, but below row r-1 once teacher perspective reverses the row order -
+            // so the lookup key must flip too, or the gap renders one row-band off.
+            const hasRowAisle =
+              perspective === 'teacher' ? dimensions.rowAisles?.includes(r - 1) : dimensions.rowAisles?.includes(r);
             return (
               <React.Fragment key={`res_r_frag_${r}`}>
                 <div className="flex items-center gap-3">

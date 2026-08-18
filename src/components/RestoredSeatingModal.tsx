@@ -222,7 +222,12 @@ export const RestoredSeatingModal: React.FC<RestoredSeatingModalProps> = ({
             {/* 2D Classroom Grid */}
             <div className="flex flex-col items-center gap-3 py-2 overflow-x-auto print:overflow-visible">
               {rowIndices.map((r) => {
-                const hasRowAisle = effectiveDimensions.rowAisles?.includes(r);
+                // Flip the aisle lookup key too when teacher perspective reverses the row
+                // order, otherwise the gap renders one row-band off from where it should.
+                const hasRowAisle =
+                  perspective === 'teacher'
+                    ? effectiveDimensions.rowAisles?.includes(r - 1)
+                    : effectiveDimensions.rowAisles?.includes(r);
                 return (
                   <React.Fragment key={`restored_r_${r}`}>
                     <div className="flex items-center gap-2 sm:gap-3">
