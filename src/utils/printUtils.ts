@@ -63,7 +63,12 @@ export function printSeatingChart(options: {
       printRows.push([info]);
     }
   });
-  if (perspective === 'teacher') printRows.reverse();
+  // Teacher perspective is a 180° turn-around: mirror both which row-band is nearest the
+  // board AND left-right order of pods within each band, or only half the flip happens.
+  if (perspective === 'teacher') {
+    printRows.reverse();
+    printRows.forEach((row) => row.reverse());
+  }
 
   const podColorHex = (podId: number) => getPodColorHex(podId);
 

@@ -661,18 +661,27 @@ export function generateCandidateArrangements(
       new Set(desks.filter((d) => d.podId !== undefined).map((d) => d.podId!))
     ).sort((a, b) => a - b);
     const deficit = students.length - activeDesks.length;
+    // Every row/col-keyed lookup (the seating grid, both print layouts) assumes each
+    // active desk has a unique (row, col). Reusing an existing desk's coordinates here
+    // made the overflow desk invisible to those lookups - silently dropping a student
+    // from the rendered grid. Give each overflow desk its own new row instead (same
+    // column as its pod, so it stays visually attached to it) and grow the grid to fit.
+    const nextRow = desks.reduce((max, d) => Math.max(max, d.row), -1) + 1;
     for (let i = 0; i < deficit; i++) {
       const targetPodId = podIds.length > 0 ? podIds[i % podIds.length] : 0;
       const podSampleDesk = desks.find((d) => d.podId === targetPodId);
       desks.push({
         id: `desk_overflow_${targetPodId}_${i}`,
-        row: podSampleDesk ? podSampleDesk.row : 0,
+        row: nextRow + i,
         col: podSampleDesk ? podSampleDesk.col : 0,
         podId: targetPodId,
         disabled: false,
       });
     }
     activeDesks = desks.filter((d) => !d.disabled);
+    if (dimensions) {
+      dimensions.rows = Math.max(dimensions.rows, nextRow + deficit);
+    }
   }
 
   const opt4Assignments = generateSingleArrangement(desks, students, constraints, 'balanced', pastAssignments);

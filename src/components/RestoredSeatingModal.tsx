@@ -42,10 +42,16 @@ export const RestoredSeatingModal: React.FC<RestoredSeatingModalProps> = ({
   const rows = effectiveDimensions.rows;
   const cols = effectiveDimensions.cols;
 
+  // Teacher perspective is a 180° turn-around: both which row is nearest (front-back) and
+  // which side is which (left-right) invert, so columns must mirror alongside rows.
   const rowIndices =
     perspective === 'student'
       ? Array.from({ length: rows }, (_, i) => i)
       : Array.from({ length: rows }, (_, i) => rows - 1 - i);
+  const colIndices =
+    perspective === 'student'
+      ? Array.from({ length: cols }, (_, i) => i)
+      : Array.from({ length: cols }, (_, i) => cols - 1 - i);
 
   const handlePrint = () => {
     printSeatingChart({
@@ -232,8 +238,11 @@ export const RestoredSeatingModal: React.FC<RestoredSeatingModalProps> = ({
                   <React.Fragment key={`restored_r_${r}`}>
                     <div className="flex items-center gap-2 sm:gap-3">
                       <div className="flex items-center gap-2 sm:gap-3">
-                        {Array.from({ length: cols }).map((_, c) => {
-                          const hasColAisle = effectiveDimensions.colAisles?.includes(c);
+                        {colIndices.map((c) => {
+                          const hasColAisle =
+                            perspective === 'teacher'
+                              ? effectiveDimensions.colAisles?.includes(c - 1)
+                              : effectiveDimensions.colAisles?.includes(c);
                           const desk = effectiveDesks.find((d) => d.row === r && d.col === c);
 
                           if (!desk || desk.disabled) {

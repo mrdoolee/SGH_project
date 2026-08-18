@@ -292,15 +292,22 @@ export const ResultView: React.FC<ResultViewProps> = ({
     setSelectedCandidateId('opt_4');
   };
 
-  // Sort rows based on perspective
+  // Teacher perspective is a 180° turn-around, not just a vertical flip: the teacher faces
+  // the opposite direction from the students, so both which row is nearest (front-back) AND
+  // which side is which (left-right) invert. Reversing only rows would draw a layout that's
+  // upside-down but not mirrored - i.e. still not what the teacher actually sees.
   const rowIndices = Array.from({ length: dimensions.rows }).map((_, i) => i);
+  const colIndices = Array.from({ length: dimensions.cols }).map((_, i) => i);
   if (perspective === 'teacher') {
     rowIndices.reverse();
+    colIndices.reverse();
   }
 
   const printRowIndices = Array.from({ length: dimensions.rows }).map((_, i) => i);
+  const printColIndices = Array.from({ length: dimensions.cols }).map((_, i) => i);
   if (printPerspective === 'teacher') {
     printRowIndices.reverse();
+    printColIndices.reverse();
   }
 
   return (
@@ -510,8 +517,11 @@ export const ResultView: React.FC<ResultViewProps> = ({
                     return (
                       <React.Fragment key={`print_r_${r}`}>
                         <div className="flex items-center gap-1.5 sm:gap-2">
-                          {Array.from({ length: dimensions.cols }).map((_, c) => {
-                            const hasColAisle = dimensions.colAisles?.includes(c);
+                          {printColIndices.map((c) => {
+                            const hasColAisle =
+                              printPerspective === 'teacher'
+                                ? dimensions.colAisles?.includes(c - 1)
+                                : dimensions.colAisles?.includes(c);
                             const desk = desks.find((d) => d.row === r && d.col === c);
 
                             return (
@@ -855,8 +865,11 @@ export const ResultView: React.FC<ResultViewProps> = ({
               <React.Fragment key={`res_r_frag_${r}`}>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-3">
-                    {Array.from({ length: dimensions.cols }).map((_, c) => {
-                      const hasColAisle = dimensions.colAisles?.includes(c);
+                    {colIndices.map((c) => {
+                      const hasColAisle =
+                        perspective === 'teacher'
+                          ? dimensions.colAisles?.includes(c - 1)
+                          : dimensions.colAisles?.includes(c);
                       const desk = desks.find((d) => d.row === r && d.col === c);
 
                       if (!desk || desk.disabled) {
