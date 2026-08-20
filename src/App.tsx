@@ -10,6 +10,7 @@ import { RestoredSeatingModal } from './components/RestoredSeatingModal';
 import { PrivacyInfoModal } from './components/PrivacyInfoModal';
 import { SystemInfoModal } from './components/SystemInfoModal';
 import { CraGuideModal } from './components/CraGuideModal';
+import { CreditModal } from './components/CreditModal';
 
 import {
   CraStudent,
@@ -74,6 +75,7 @@ export default function App() {
   const [isCraGuideOpen, setIsCraGuideOpen] = useState<boolean>(false);
   const [isPrivacyInfoOpen, setIsPrivacyInfoOpen] = useState<boolean>(false);
   const [isSystemInfoOpen, setIsSystemInfoOpen] = useState<boolean>(false);
+  const [isCreditModalOpen, setIsCreditModalOpen] = useState<boolean>(false);
   const [restoredModalResult, setRestoredModalResult] = useState<SeatingResult | null>(null);
   const [isRestoredModalOpen, setIsRestoredModalOpen] = useState<boolean>(false);
 
@@ -269,7 +271,15 @@ export default function App() {
             </span>
           </div>
           <div className="text-slate-500 font-normal">
-            © 2026 Designed & Developed by 두리쌤. All rights reserved.
+            © 2026 Designed & Developed by{' '}
+            <button
+              type="button"
+              onClick={() => setIsCreditModalOpen(true)}
+              className="font-semibold underline decoration-dotted underline-offset-2 hover:text-indigo-600 transition-colors cursor-pointer"
+            >
+              두리쌤
+            </button>
+            . All rights reserved.
           </div>
         </footer>
       </div>
@@ -307,6 +317,11 @@ export default function App() {
       <SystemInfoModal
         isOpen={isSystemInfoOpen}
         onClose={() => setIsSystemInfoOpen(false)}
+      />
+
+      <CreditModal
+        isOpen={isCreditModalOpen}
+        onClose={() => setIsCreditModalOpen(false)}
       />
     </div>
   );
